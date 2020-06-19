@@ -8,6 +8,8 @@ env = make("halite", debug=True)
 
 env.run(["submission.py", "random", "random", "random"])
 
+print(str(time.time() - ts))
+
 html = env.render(mode="html")
 json = env.render(mode="json")
 
