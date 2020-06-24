@@ -48,6 +48,7 @@ def agent(obs, config):
 
     moved_to = set({})
     moved = set({})
+    assigned = set({})
 
     if turn == 0:
         me.ships[0].next_action = ShipAction.CONVERT
@@ -60,10 +61,13 @@ def agent(obs, config):
         halite_spots.sort(key=lambda cell: cell.halite)
 
         for ship in me.ships:
-            if ship.halite > 1500:
+            if ship.halite > 1500 or (ship.halite > 500 and min(list(map(
+                    lambda shipyard: distance(shipyard.position, ship.position), me.shipyards)) + [400]) > 7):
+                # converting into a shipyard
                 moved.add(ship.id)
                 ship.next_action = ShipAction.CONVERT
             elif ship.halite > 500 and len(me.shipyards) > 0:
+                # moving back to base
                 me.shipyards.sort(
                     key=lambda shipyard: distance(shipyard.position, ship.position))
                 next_action = move_to(
@@ -78,17 +82,21 @@ def agent(obs, config):
         # Assign one halite spot to each ship
         # Make the ship stay on the halite spot
         # If not already there, make the ship move to the assigned halite spot
+        options = []
         for cell in halite_spots:
-            available_ships = list(
-                filter(lambda ship: ship.id not in moved, me.ships))
-            available_ships.sort(key=lambda ship: distance(
-                cell.position, ship.position))
+            for ship in me.ships:
+                options += [(cell.halite*.25 - distance(ship.position,
+                                                        cell.position)*10, cell, ship)]
+        options.sort(key=lambda option: option[0], reverse=True)
 
-            if len(available_ships) > 0:
-                ship = available_ships[0]
+        for option in options:
+            ship = option[2]
+            cell = option[1]
+            if ship.id not in moved and cell.position not in assigned:
                 if ship.position == cell.position:
+                    moved_to.add(ship.position)
                     moved.add(ship.id)
-                    moved_to.add(cell.position)
+                    assigned.add(cell.position)
                 else:
                     next_action = move_to(
                         ship.position, cell.position)
@@ -97,15 +105,14 @@ def agent(obs, config):
                     if next_action[1] not in moved_to:
                         moved_to.add(next_action[1])
                         moved.add(ship.id)
+                        assigned.add(cell.position)
                         ship.next_action = next_action[0]
-                    else:
-                        print('Unused ship')
 
     # create more shipyards
     for kami in me.shipyards:
         empty_shipyard = board[kami.position].ship == None and kami.position not in moved_to
 
-        if empty_shipyard and remaining_halite >= 500:
+        if empty_shipyard and remaining_halite >= 500 and len(me.ships) < 30:
             kami.next_action = ShipyardAction.SPAWN
             if kami.next_action == ShipyardAction.SPAWN:
                 remaining_halite -= 500
