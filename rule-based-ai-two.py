@@ -84,11 +84,12 @@ def agent(obs, config):
         halite_spots.sort(key=lambda cell: cell.halite)
 
         for ship in me.ships:
-            if ship.halite > 1500 or (ship.halite > 500 and min(list(map(
-                    lambda shipyard: distance(shipyard.position, ship.position), me.shipyards)) + [400]) > 4):
+            if ship.halite > 1500 or ((ship.halite >= 500 or (remaining_halite >= 1000 and len(me.ships) > 9)) and min(list(map(
+                    lambda shipyard: distance(shipyard.position, ship.position), me.shipyards)) + [400]) > 5):
                 # converting into a shipyard
                 moved[ship.id] = ship.position
                 ship.next_action = ShipAction.CONVERT
+                remaining_halite -= max(500-ship.halite, 0)
 
         # Assign one halite spot to each ship
         # Make the ship stay on the halite spot
@@ -104,8 +105,11 @@ def agent(obs, config):
             me.shipyards.sort(
                 key=lambda shipyard: distance(shipyard.position, ship.position))
             position = me.shipyards[0].position
-            options += [(ship.halite - distance(ship.position,
-                                                position)*10, position, ship, True)]
+            # if ship.halite > 10:
+            #     print(str(len(me.shipyards)) + ' ' +
+            #           str(me.shipyards[0].position))
+            options += [(ship.halite*0.5 - distance(ship.position,
+                                                    position)*10, position, ship, True)]
 
         options.sort(key=lambda option: option[0], reverse=True)
 
@@ -117,7 +121,7 @@ def agent(obs, config):
             if ship.position != position:
                 next_action = move_to(
                     ship.position, position)
-            if ship.id not in moved and position not in assigned and next_action[1] not in moved_to:
+            if ship.id not in moved and position not in assigned and next_action[1] not in moved_to and (ship.halite < danger[position] if position in danger else True):
                 moved_to.add(next_action[1])
                 moved[ship.id] = next_action[1]
                 ship.next_action = next_action[0]
