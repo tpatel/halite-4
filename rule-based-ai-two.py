@@ -100,16 +100,17 @@ def agent(obs, config):
                 options += [(cell.halite*.25 - distance(ship.position,
                                                         cell.position)*10, cell.position, ship, False)]
 
-        for ship in me.ships:
-            # moving back to base
-            me.shipyards.sort(
-                key=lambda shipyard: distance(shipyard.position, ship.position))
-            position = me.shipyards[0].position
-            # if ship.halite > 10:
-            #     print(str(len(me.shipyards)) + ' ' +
-            #           str(me.shipyards[0].position))
-            options += [(ship.halite*0.5 - distance(ship.position,
-                                                    position)*10, position, ship, True)]
+        if len(me.shipyards) > 0:
+            for ship in me.ships:
+                # moving back to base
+                me.shipyards.sort(
+                    key=lambda shipyard: distance(shipyard.position, ship.position))
+                position = me.shipyards[0].position
+                # if ship.halite > 10:
+                #     print(str(len(me.shipyards)) + ' ' +
+                #           str(me.shipyards[0].position))
+                options += [(ship.halite*0.5 - distance(ship.position,
+                                                        position)*10, position, ship, True)]
 
         options.sort(key=lambda option: option[0], reverse=True)
 
