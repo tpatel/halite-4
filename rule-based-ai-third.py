@@ -78,7 +78,7 @@ def agent(obs, config):
     else:
         # Find the halite that is not too far away from one base and that has the most halite
         # Only spots that have more than x halite
-        halite_spots = list(filter(lambda cell: cell.halite > 300 and min(list(map(
+        halite_spots = list(filter(lambda cell: cell.halite > 50 and min(list(map(
             lambda shipyard: distance(shipyard.position, cell.position), me.shipyards)) + [400]) < 12, board.cells.values()))
 
         halite_spots.sort(key=lambda cell: cell.halite)
