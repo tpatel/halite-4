@@ -103,14 +103,9 @@ def agent(obs, config):
         if len(me.shipyards) > 0:
             for ship in me.ships:
                 # moving back to base
-                me.shipyards.sort(
-                    key=lambda shipyard: distance(shipyard.position, ship.position))
-                position = me.shipyards[0].position
-                # if ship.halite > 10:
-                #     print(str(len(me.shipyards)) + ' ' +
-                #           str(me.shipyards[0].position))
-                options += [(ship.halite*0.5 - distance(ship.position,
-                                                        position)*10, position, ship, True)]
+                for kami in me.shipyards:
+                    options += [(ship.halite*0.5 - distance(ship.position,
+                                                            kami.position)*10, kami.position, ship, True)]
 
         options.sort(key=lambda option: option[0], reverse=True)
 
@@ -138,7 +133,8 @@ def agent(obs, config):
 
     # create more shipyards
     for kami in me.shipyards:
-        empty_shipyard = board[kami.position].ship == None and kami.position not in moved_to
+        empty_shipyard = (board[kami.position].ship == None or (board[kami.position].ship.id in moved and moved[board[kami.position].ship.id]
+                                                                != kami.position)) and kami.position not in moved_to
 
         if empty_shipyard and remaining_halite >= 500 and len(me.ships) < 30:
             kami.next_action = ShipyardAction.SPAWN
